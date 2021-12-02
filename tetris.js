@@ -2,10 +2,12 @@ const screenWidth = 500;
 const screenHeight = 600;
 const yMargin = 4;
 const yMarginBottom = 1;
-const xMargin = 1;
+const xMargin = 3;
 const gridWidth = 10 + xMargin*2;
 const gridHeight = 20 + yMargin + yMarginBottom;
 const bgColor = "#222222";
+const lineColor = "#111111";
+const marginColor = "#000000";
 const squareWidth = 30;
 const squareHeight = 30;
 var level = 1;
@@ -57,19 +59,19 @@ function checkKey_(e) {
 
     e = e || window.event;
 
-    if (e.keyCode == '38') {
+    if (e.keyCode == '38' || e.keyCode == '87') {
         fastDrop();
         // up arrow
     }
-    else if (e.keyCode == '40') {
+    else if (e.keyCode == '40' || e.keyCode == '83') {
         drop();
         // down arrow
     }
-    else if (e.keyCode == '37') {
+    else if (e.keyCode == '37' || e.keyCode == '65') {
         left();
        // left arrow
     }
-    else if (e.keyCode == '39') {
+    else if (e.keyCode == '39' || e.keyCode == '68') {
         right();
        // right arrow
     }
@@ -104,17 +106,35 @@ function square(x, y, color, width, height) {
     this.isActive = false;
     this.isSet = false;
     this.isTarget = false;
+    this.isLmargin = false;
+    this.isRmargin = false;
     this.height = height;
     this.width = width;
+    this.hollow = false;
+    this.lineColor = lineColor;
+    
     
 
     this.update = function() {
         var ctx = gameCanvas.context;
-        ctx.fillStyle = this.color;
-        ctx.strokeStyle = "black";
+        
+        
+        
+        if (this.hollow) {
+            outline = 6;
+            ctx.lineWidth = outline;
+            ctx.strokeStyle = this.color;
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.strokeRect(this.x+outline/2, this.y+outline/2, this.width-outline, this.height-outline);
+            
+        } else {
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
         ctx.lineWidth = 1;
+        ctx.strokeStyle = this.lineColor;
         ctx.strokeRect(this.x, this.y, this.width, this.height);
-        ctx.fillRect(this.x, this.y, this.width, this.height);
         //ctx.stroke();
     }
 
@@ -132,12 +152,16 @@ function updateGameCanvas() {
     
     
     
-    for(let j=0;j<gridWidth;j++) {
+    for(let j=0;j<gridWidth-xMargin ;j++) {
         for(let i=0;i<gridHeight;i++) {
             if ( !grid[j][i].isActive && !grid[j][i].isSet) grid[j][i].color = bgColor;
             
-            //if ( grid[j][i].isSet ) grid[j][i].color = "pink";
-            if ( grid[j][i].isTarget ) grid[j][i].color = "#444444";
+            if ( grid[j][i].isLmargin ) grid[j][i].color = "pink";
+            if ( grid[j][i].isTarget ) {
+                grid[j][i].color = "#383838";
+                grid[j][i].hollow = true;
+            }
+            else grid[j][i].hollow = false;
             grid[j][i].update();
         }
     }  
@@ -166,34 +190,46 @@ function fillGrid() {
     
 }
 
-function setMargins() {
-    for(let i=0;i<gridHeight;i++) {
+function setMargins() { 
+    for(let i=0;i<gridHeight;i++) { 
+    
         grid[gridWidth-xMargin][i].isSet = true;
-        grid[gridWidth-xMargin][i].color = "black";
+        grid[gridWidth-xMargin][i].color = marginColor;
+        grid[gridWidth-xMargin][i].lineColor = marginColor;
+        grid[gridWidth-xMargin][i].isRmargin = true;
+       
+        
+        
         grid[xMargin-1][i].isSet = true;
-        grid[xMargin-1][i].color = "black";
+        grid[xMargin-1][i].color = marginColor;
+        grid[xMargin-1][i].lineColor = marginColor;
+        grid[xMargin-1][i].isLmargin = true;
     }
     for(let i=0;i<gridWidth;i++) {
         grid[i][gridHeight - yMarginBottom].isSet = true;
-        grid[i][gridHeight - yMarginBottom].color = "black";
+        grid[i][gridHeight - yMarginBottom].color = marginColor;
     }
 
 }
 
-function _piece(x, y, type, rotation, isTarget) {
+function _piece(x, y, type, rotation, color, isTarget) {
     //var squareCoord;
     this.occupiedBlocks; 
 
     this.rotation = rotation;
-    this.x = x;
+    this.x = x; 
     this.y = y;
     this.isSet = false;
     this.isActive = true;
     this.isTarget = isTarget;
+    this.color = color;
+    this.type = type;
+
 
     this.update = function() {
         x = this.x;
         y = this.y;
+        rotation = this.rotation;
     
         switch(type) {
             
@@ -219,11 +255,11 @@ function _piece(x, y, type, rotation, isTarget) {
                 tBlock();
                 break;
         }
-        this.occupiedBlocks = buildPiece(this.isSet, this.isActive, this.isTarget);
+        this.occupiedBlocks = buildPiece(this.isSet, this.isActive, this.isTarget, this.color);
         
         
-        var color;
-        function buildPiece(isSet, isActive, isTarget) {
+        //var color;
+        function buildPiece(isSet, isActive, isTarget, color) {
             var occupiedBlocks = new Array;
             for(let i=0;i<4;i++) { //set blocks
                 occupiedBlocks.push([ x+squareCoord[i][0] , y+squareCoord[i][1] ]);
@@ -256,7 +292,7 @@ function _piece(x, y, type, rotation, isTarget) {
 
         function tBlock() {
             color = "white";
-            switch(this.rotation) {
+            switch(rotation) {
                 case 0: 
                     squareCoord = [ [1,0],[0,1],[1,1],[2,1] ];  
                     break;
@@ -274,7 +310,7 @@ function _piece(x, y, type, rotation, isTarget) {
         }
         function sBlock() {
             color = "purple"
-            switch(this.rotation) {
+            switch(rotation) {
                 
                 case 0:
                 case 2: 
@@ -290,7 +326,7 @@ function _piece(x, y, type, rotation, isTarget) {
         }
         function zBlock() {
             color = "green"
-            switch(this.rotation) {
+            switch(rotation) {
                 
                 case 0:
                 case 2: 
@@ -306,9 +342,9 @@ function _piece(x, y, type, rotation, isTarget) {
         }     
         function jBlock() {
             color = "red"
-            switch(this.rotation) {
+            switch(rotation) {
                 case 0: 
-                    squareCoord = [ [0,0],[0,1],[1,1],[2,1] ];  
+                    squareCoord = [ [0 ,0],[0,1],[1,1],[2,1] ];  
                     break;
                 case 1: 
                     squareCoord = [ [2,0],[1,0],[1,1],[1,2] ];  
@@ -317,7 +353,7 @@ function _piece(x, y, type, rotation, isTarget) {
                     squareCoord = [ [2,2],[0,1],[1,1],[2,1] ];  
                     break;
                 case 3: 
-                    squareCoord = [ [0,2],[1,0],[1,1],[1,2] ];  
+                    squareCoord = [ [1,2],[2,0],[2,1],[2,2] ];  
                     break;
 
              }
@@ -325,12 +361,12 @@ function _piece(x, y, type, rotation, isTarget) {
     
         function lBlock() {
             color = "blue";
-            switch(this.rotation) {
+            switch(rotation) {
                 case 0: 
                     squareCoord = [ [2,0],[0,1],[1,1],[2,1] ];    
                     break;
                 case 1: 
-                    squareCoord = [ [0,0],[1,0],[1,1],[1,2] ];  
+                    squareCoord = [ [1,0],[2,0],[2,1],[2,2] ];  
                     break;
                 case 2: 
                     squareCoord = [ [0,2],[0,1],[1,1],[2,1] ];      
@@ -350,7 +386,7 @@ function _piece(x, y, type, rotation, isTarget) {
         function iBlock() {
             color = "orange";
 
-            switch (this.rotation) {
+            switch (rotation) {
                 case 0:
                 case 2:
                     squareCoord = [ [0,2],[1,2],[2,2],[3,2] ];
@@ -368,65 +404,72 @@ function _piece(x, y, type, rotation, isTarget) {
 }
 
 function rotate() {
-    var moveable = true;
-    piece.isActive = false;
-    targetPiece.isActive = false;
-    targetPiece.isTarget = false;
-    piece.update();
-    targetPiece.update();
-    if (rotation < 3) rotation++;
-    else rotation = 0;
 
-    
-    piece.rotation = rotation;
-    
-    piece.update();
-    for (i in piece.occupiedBlocks) {
-       // console.log((grid[piece.occupiedBlocks[i][0]][piece.occupiedBlocks[i][1]].isSet));
-        if (!grid[piece.occupiedBlocks[i][0]][piece.occupiedBlocks[i][1]].isSet) {
-            
-            moveable = false;
+ 
 
-            
+
+ 
+    if (canRotate()) {
+            piece.rotation = rotateCalculator(piece.rotation, true);
+            piece.x = testPiece.x;
+            testPiece.rotation = rotateCalculator(piece.rotation, true);
+    }
+ 
+    updatePiece();
+    
+    function rotateCalculator(input, right) {
+        if (right) {
+            if (input < 3) return input+1;
+            else return 0;
+        } else {    
+            if (input >= 0) return input-1;
+            else return 3;
         }
     }
-    if (moveable) {    
-        if (rotation >= 0) rotation--;
-        else rotation = 3;
-    }
-    
-    targetPiece.isActive = true;
-    targetPiece.isTarget = true;
-    targetPiece.y = piece.y;
-    targetPiece.update();
-    targetFastDrop();
-     piece.isActive = true;
-     piece.update();
      
 
     
 
 }
 
+function updatePiece() {
+    testPiece.x = piece.x;
+    targetPiece.rotation = piece.rotation;
+    targetPiece.x = piece.x;
+    targetPiece.isActive = true;
+    targetPiece.isTarget = true;
+    targetPiece.y = piece.y;
+    targetPiece.update();
+    targetFastDrop();
+    piece.isActive = true;
+    testPiece.update();
+    piece.update();
+}
+
+
 function createPiece() {
     let type = "";
     let randomNum = 10;
     while(randomNum >= 7) randomNum = Math.floor(Math.random()*10);
     switch (randomNum) {
-        case 0: type = "iBlock"; break;
-        case 1: type = "jBlock"; break;
-        case 2: type = "lBlock"; break;
-        case 3: type = "oBlock"; break;
-        case 4: type = "sBlock"; break;
-        case 5: type = "tBlock"; break;
-        case 6: type = "zBlock"; break;
+        case 0: type = "iBlock"; color = "yellow"; break;
+        case 1: type = "jBlock"; color = "orange"; break;
+        case 2: type = "lBlock"; color = "blue"; break;
+        case 3: type = "oBlock"; color = "green"; break;
+        case 4: type = "sBlock"; color = "purple"; break;
+        case 5: type = "tBlock"; color = "red"; break;
+        case 6: type = "zBlock"; color = "white"; break;
     }
+    //type = "iBlock";
     //console.log(randomNum);
-
-    piece = new _piece(6,2,type,0);  // (x , y)  y higher than 2, x higher than 1
-    targetPiece = new _piece(6,2,type,0,true);  // (x , y)  y higher than 2, x higher than 1
+    testPiece = new _piece(6,2,type,1, bgColor, false);  // (x , y)  y higher than 2, x higher than 1
+    piece = new _piece(6,2,type,0,color, false);  // (x , y)  y higher than 2, x higher than 1
+    targetPiece = new _piece(6,2,type,0, "black", true);  // (x , y)  y higher than 2, x higher than 1
+   
+    testPiece.update();
     targetPiece.update();
     piece.update();
+    
     
     
 }
@@ -460,18 +503,22 @@ function targetFastDrop() {
 }
 
 function drop() {
+    console.log(canRotate());
     
     var moveable = true;
 
     piece.isActive = false;
+    targetPiece.isActive = false;
 
     piece.update();
-    
-    for (i in piece.occupiedBlocks) {
 
+   // var b = false;
+    for (i in piece.occupiedBlocks) {
+        //console.log( grid[testPiece.occupiedBlocks[i][0]-1] [testPiece.occupiedBlocks[i][1]].isRmargin );
         if (grid[piece.occupiedBlocks[i][0]][piece.occupiedBlocks[i][1]+1].isSet) moveable = false;
-        
+       // if (grid[testPiece.occupiedBlocks[i][0]][testPiece.occupiedBlocks[i][1]].isSet) b = true;
     }
+   // console.log(b);
     if (moveable) piece.y++; 
     
     else {
@@ -485,11 +532,64 @@ function drop() {
     }
     piece.isActive = true;
     
-
+    
+    
+   
+    testPiece.y = piece.y;
+    testPiece.update();
+   targetFastDrop();
     piece.update();
-    targetFastDrop();
-    //targetPiece.update();
+  
     return moveable;
+    
+}
+
+function canRotate() {
+    piece.isActive = false;
+    targetPiece.isActive = false;
+    targetPiece.isTarget = false;
+    piece.update();
+    targetPiece.update();
+    
+    for (i in testPiece.occupiedBlocks) {
+        if (grid[testPiece.occupiedBlocks[i][0]][testPiece.occupiedBlocks[i][1]].isSet){
+            testPiece.x = piece.x+1;
+            
+           
+            
+        }
+        testPiece.update();
+    }
+    for (i in testPiece.occupiedBlocks) {
+        if (grid[testPiece.occupiedBlocks[i][0]][testPiece.occupiedBlocks[i][1]].isSet){
+            testPiece.x = piece.x-1;
+            
+           
+            
+        }
+        testPiece.update();
+    }
+    for (i in testPiece.occupiedBlocks) {
+        if (grid[testPiece.occupiedBlocks[i][0]][testPiece.occupiedBlocks[i][1]].isSet){
+            testPiece.x = piece.x-2;
+            
+           
+            
+        }
+        testPiece.update();
+    }
+    for (i in testPiece.occupiedBlocks) {
+        if (grid[testPiece.occupiedBlocks[i][0]][testPiece.occupiedBlocks[i][1]].isSet){
+            return false;
+            
+           
+            
+        }
+        
+    }
+    return true;
+
+   
     
 }
 
@@ -498,15 +598,9 @@ function fastDrop() {
 }
 
 function left() {
+    canRotate();
     var moveable = true;
-    
-    piece.isActive = false;
-    targetPiece.isActive = false;
-    targetPiece.isTarget = false;
-  
-    piece.update();
-    targetPiece.update();
-    //console.log(piece.occupiedBlocks);
+
     for (i in piece.occupiedBlocks) {
        
         if (grid[piece.occupiedBlocks[i][0]-1][piece.occupiedBlocks[i][1]].isSet) moveable = false;
@@ -515,35 +609,15 @@ function left() {
     if (moveable) {
         piece.x--; 
         targetPiece.x = piece.x;
-        targetPiece.y = piece.y;
+        
+        testPiece.x = piece.x;
     }
-  
-  
-   targetPiece.isActive = true;
-   targetPiece.isTarget = true;
-   
-   targetPiece.update();
-   targetFastDrop();
-    piece.isActive = true;
-    piece.update();
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    updatePiece();    
 }
 function right() {
+    canRotate();
     var moveable = true;
-    piece.isActive = false;
-    targetPiece.isActive = false;
-    targetPiece.isTarget = false;
-    piece.update();
-    targetPiece.update();
-    //console.log(piece.occupiedBlocks);
+
     for (i in piece.occupiedBlocks) {
        
         if (grid[piece.occupiedBlocks[i][0]+1][piece.occupiedBlocks[i][1]].isSet) moveable = false;
@@ -552,14 +626,9 @@ function right() {
     if (moveable) {
         piece.x++;
         targetPiece.x = piece.x;
+        testPiece.x = piece.x;
     }
-    targetPiece.isActive = true;
-    targetPiece.isTarget = true;
-    targetPiece.y = piece.y;
-    targetPiece.update();
-    targetFastDrop();
-     piece.isActive = true;
-     piece.update();
+    updatePiece();
      
 }
 
@@ -568,11 +637,7 @@ function set() {
     piece.update();
     isGameOver();
     scoreLines();
-    console.log(score);
-    scoreBox.text = score;
-    
-    
-    
+    scoreBox.text = score;    
 }
 
 
@@ -644,6 +709,7 @@ function cutLine(line) {
         for (let i=xMargin; i < gridWidth-xMargin; i++) {
             grid[i][j+1].color = grid[i][j].color;
             grid[i][j+1].isSet = grid[i][j].isSet;
+            grid[i][j+1].isActive = grid[i][j].isActive;
         }
     }    
 
@@ -655,13 +721,13 @@ function setExplosives(line) {
     let lineY = (line-yMargin)*30;
     let x = squareWidth;
     
-    console.log(x);
+    //console.log(x);
     
     for (let i = 0; i < 10; i++) {
         let color = grid[i+xMargin][line].color;
         
         let a = smallTestSquare.length;
-        console.log(a);
+        //console.log(a);
         
         smallTestSquare.push([]);
 
@@ -697,7 +763,7 @@ function setExplosives(line) {
 
 function testAnimation() {
 
-    let speed = 1;
+    let speed = 10;
     
     if (smallTestSquare.length && Math.abs(smallTestSquare[0][0].x) < 1000) {
         //testSquare.x = 2000;
@@ -758,7 +824,7 @@ function preFill() {
 function blow() {
 
     //gameCanvas.setInterval.start.interval(updateGameCanvas, 10000);
-    console.log(gameCanvas.interval);
+    //console.log(gameCanvas.interval);
     
 }
 
