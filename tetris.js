@@ -2,7 +2,7 @@ const screenWidth = 500;
 const screenHeight = 600;
 const yMargin = 4;
 const yMarginBottom = 1;
-const xMargin = 3;
+const xMargin = 5;
 const gridWidth = 10 + xMargin*2;
 const gridHeight = 20 + yMargin + yMarginBottom;
 const bgColor = "#222222";
@@ -16,8 +16,12 @@ var score = 0;
 
 var grid = new Array();
 var piece;
+var previewPiece;
+var testPiece;
+var targetPiece;
 var scoreBox = new textBox(400, 80, score, 80);
 var smallTestSquare = new Array();
+
 
 function start() {
     
@@ -44,13 +48,17 @@ var gameCanvas = {
         this.interval = setInterval(updateGameCanvas, 40);
         this.speed = setInterval(drop, speed);
         this.keyInterval = setInterval(checkKey, 40);
-       
+        
  
     },
     clear : function() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         //score = 0;
 
+    },
+    update : function() {
+       clearInterval(this.speed);
+       this.speed = setInterval(drop, speed);
     }
 
 }
@@ -145,18 +153,19 @@ var rotation = 0;
 function updateGameCanvas() {
     //document.onkeydown = checkKey;
     gameCanvas.clear();
-    scoreBox.update();
-    
+   
+    previewPiece.update();
+
    
  
     
     
     
-    for(let j=0;j<gridWidth-xMargin ;j++) {
+    for(let j=0;j<gridWidth ;j++) {
         for(let i=0;i<gridHeight;i++) {
             if ( !grid[j][i].isActive && !grid[j][i].isSet) grid[j][i].color = bgColor;
-            
-            if ( grid[j][i].isLmargin ) grid[j][i].color = "pink";
+          
+            //if ( grid[j][i].isRmargin ) grid[j][i].color = "pink";
             if ( grid[j][i].isTarget ) {
                 grid[j][i].color = "#383838";
                 grid[j][i].hollow = true;
@@ -170,6 +179,7 @@ function updateGameCanvas() {
     //testSquare.update();
     //testDraw();
     //testSquare.update();
+    scoreBox.update();
     testAnimation();
 
     
@@ -187,22 +197,23 @@ function fillGrid() {
         }
         grid.push(row);
     }
-    
+    console.log(grid);
 }
 
 function setMargins() { 
     for(let i=0;i<gridHeight;i++) { 
-    
-        grid[gridWidth-xMargin][i].isSet = true;
-        grid[gridWidth-xMargin][i].color = marginColor;
-        grid[gridWidth-xMargin][i].lineColor = marginColor;
-        grid[gridWidth-xMargin][i].isRmargin = true;
-       
+        for(let j=0;j<xMargin;j++) {
+            grid[gridWidth-xMargin+j][i].isSet = true;
+            grid[gridWidth-xMargin+j][i].color = marginColor;
+            grid[gridWidth-xMargin+j][i].lineColor = marginColor;
+            grid[gridWidth-xMargin+j][i].isRmargin = true;
+            
+        }
+
         
         
         grid[xMargin-1][i].isSet = true;
-        grid[xMargin-1][i].color = marginColor;
-        grid[xMargin-1][i].lineColor = marginColor;
+  
         grid[xMargin-1][i].isLmargin = true;
     }
     for(let i=0;i<gridWidth;i++) {
@@ -274,7 +285,7 @@ function _piece(x, y, type, rotation, color, isTarget) {
                     }
                     
                     else {
-                        if (!square.isSet) square.color = color;
+                        if (!square.isSet || square.isRmargin) square.color = color;
                         square.isActive = isActive;
                         if (isSet) square.isSet = true;
                         
@@ -404,10 +415,6 @@ function _piece(x, y, type, rotation, color, isTarget) {
 }
 
 function rotate() {
-
- 
-
-
  
     if (canRotate()) {
             piece.rotation = rotateCalculator(piece.rotation, true);
@@ -448,6 +455,7 @@ function updatePiece() {
 
 
 function createPiece() {
+    function random() {
     let type = "";
     let randomNum = 10;
     while(randomNum >= 7) randomNum = Math.floor(Math.random()*10);
@@ -462,13 +470,39 @@ function createPiece() {
     }
     //type = "iBlock";
     //console.log(randomNum);
-    testPiece = new _piece(6,2,type,1, bgColor, false);  // (x , y)  y higher than 2, x higher than 1
-    piece = new _piece(6,2,type,0,color, false);  // (x , y)  y higher than 2, x higher than 1
-    targetPiece = new _piece(6,2,type,0, "black", true);  // (x , y)  y higher than 2, x higher than 1
+        return type;
+    }
+
+    if (!piece) piece = new _piece(9,2,random(),0,color, false);  // (x , y)  y higher than 2, x higher than 1
+    else {
+        let color = previewPiece.color;
+        previewPiece.color = marginColor;
+        previewPiece.update();
+        previewPiece.x = 9;
+        previewPiece.y = 2;
+        previewPiece.color = color;
+     
+        
+        previewPiece.update();  
+        piece = previewPiece;
+        piece.update();
+
+    }
+    previewPiece = new _piece(16,8,random(),0,color, false);  // (x , y)  y higher than 2, x higher than 1
+    
+    
+  
+  
+    testPiece = new _piece(piece.x,piece.y,piece.type,1, bgColor, false);  // (x , y)  y higher than 2, x higher than 1
+   
+   
+    targetPiece = new _piece(piece.x,piece.y,piece.type,0, "black", true);  // (x , y)  y higher than 2, x higher than 1
    
     testPiece.update();
     targetPiece.update();
     piece.update();
+    previewPiece.isActive = true;
+    previewPiece.update();
     
     
     
@@ -491,7 +525,7 @@ function targetDrop() {
     
 
     targetPiece.isActive = true;
-    //targetPiece.isTarget = true;
+
     
     return moveable;
 }
@@ -503,45 +537,28 @@ function targetFastDrop() {
 }
 
 function drop() {
-    console.log(canRotate());
-    
+    canRotate();
     var moveable = true;
-
-    piece.isActive = false;
-    targetPiece.isActive = false;
-
-    piece.update();
-
-   // var b = false;
     for (i in piece.occupiedBlocks) {
-        //console.log( grid[testPiece.occupiedBlocks[i][0]-1] [testPiece.occupiedBlocks[i][1]].isRmargin );
+
         if (grid[piece.occupiedBlocks[i][0]][piece.occupiedBlocks[i][1]+1].isSet) moveable = false;
-       // if (grid[testPiece.occupiedBlocks[i][0]][testPiece.occupiedBlocks[i][1]].isSet) b = true;
+
     }
-   // console.log(b);
+
     if (moveable) piece.y++; 
     
     else {
-        
-        
         set();
         
-        createPiece();
         
-        
+        //previewPiece.color = marginColor;
+        //previewPiece.update();  
+        createPiece(); 
+             
     }
-    piece.isActive = true;
     
-    
-    
-   
-    testPiece.y = piece.y;
-    testPiece.update();
-   targetFastDrop();
-    piece.update();
-  
+    updatePiece();
     return moveable;
-    
 }
 
 function canRotate() {
@@ -652,13 +669,16 @@ function isGameOver() {
 }
 
 function gameOver() {
-    
+    score = 0;
+    level = 1;
+    speed = 1000;
     grid = new Array();
+    gameCanvas.update();
     gameCanvas.clear();
     fillGrid();
     setMargins();
     createPiece();
-    score = 0;
+    
   
 
 }
@@ -676,6 +696,9 @@ function scoreLines() {
     for (i of completedLines) {
         cutLine(i);
         score++;
+        if (score >= level * 5) level++;
+        speed = 1000 / level;
+        gameCanvas.update();
         
     }
     
