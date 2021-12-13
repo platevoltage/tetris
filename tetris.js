@@ -1,5 +1,5 @@
-const screenWidth = window.innerWidth-20;
-const screenHeight = window.innerHeight-20;
+const screenWidth = window.innerWidth-22;
+const screenHeight = window.innerHeight-22;
 const yMargin = 4;
 const yMarginBottom = 1;
 const xMargin = 5;
@@ -833,12 +833,16 @@ function testAnimation() {
 
             smallTestSquare[i][0].x-=randomX;
             smallTestSquare[i][0].y-=randomY;
+  
             smallTestSquare[i][1].x+=randomX;
             smallTestSquare[i][1].y-=randomY;
+      
             smallTestSquare[i][2].x+=randomX;
             smallTestSquare[i][2].y+=randomY;
+
             smallTestSquare[i][3].x-=randomX;
             smallTestSquare[i][3].y+=randomY;
+ 
         
 
 
