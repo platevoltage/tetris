@@ -11,7 +11,7 @@ const marginColor = "#000000";
 const squareWidth = 30;
 const squareHeight = 30;
 var level = 1;
-var speed = 1000  /level;
+var speed = 1000  / level;
 var score = 0;
 
 var grid = new Array();
@@ -125,18 +125,27 @@ function square(x, y, color, width, height) {
 
     this.update = function() {
         var ctx = gameCanvas.context;
-        
-        
+        outline = 6;
+        ctx.lineWidth = outline;
         
         if (this.hollow) {
-            outline = 6;
-            ctx.lineWidth = outline;
+            
+            
             ctx.strokeStyle = this.color;
             ctx.fillStyle = bgColor;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.strokeRect(this.x+outline/2, this.y+outline/2, this.width-outline, this.height-outline);
             
-        } else {
+        } else if ((this.isActive || this.isSet) && this.color != "#000000") {
+            
+        
+            ctx.strokeStyle = "#00000033";
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.strokeRect(this.x+outline/2, this.y+outline/2, this.width-outline, this.height-outline);
+        }
+
+        else {
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
         }
@@ -163,9 +172,14 @@ function updateGameCanvas() {
     
     for(let j=0;j<gridWidth ;j++) {
         for(let i=0;i<gridHeight;i++) {
-            if ( !grid[j][i].isActive && !grid[j][i].isSet) grid[j][i].color = bgColor;
-          
-            //if ( grid[j][i].isRmargin ) grid[j][i].color = "pink";
+            if ( !grid[j][i].isActive && !grid[j][i].isSet) {
+                grid[j][i].color = bgColor;
+                
+            }
+            if ( grid[j][i].isRmargin ) {
+                //grid[j][i].color = "pink";
+                //grid[j][i].isActive = false;
+            }
             if ( grid[j][i].isTarget ) {
                 grid[j][i].color = "#383838";
                 grid[j][i].hollow = true;
@@ -269,7 +283,7 @@ function _piece(x, y, type, rotation, color, isTarget) {
         this.occupiedBlocks = buildPiece(this.isSet, this.isActive, this.isTarget, this.color);
         
         
-        //var color;
+        
         function buildPiece(isSet, isActive, isTarget, color) {
             var occupiedBlocks = new Array;
             for(let i=0;i<4;i++) { //set blocks
@@ -457,10 +471,14 @@ function updatePiece() {
 function createPiece() {
     function random() {
     let type = "";
-    let randomNum = 10;
-    while(randomNum >= 7) randomNum = Math.floor(Math.random()*10);
+    colorHex = 0xFFFFFF;
+    color = "#" + colorHex.toString(16)
+    let randomNum = Math.floor(Math.random()*7);
+    //console.log(randomNum);
+    console.log("#" + colorHex.toString(16));
+    
     switch (randomNum) {
-        case 0: type = "iBlock"; color = "yellow"; break;
+        case 0: type = "iBlock"; color = "yellow" ;break;
         case 1: type = "jBlock"; color = "orange"; break;
         case 2: type = "lBlock"; color = "blue"; break;
         case 3: type = "oBlock"; color = "green"; break;
@@ -475,7 +493,7 @@ function createPiece() {
 
     if (!piece) piece = new _piece(9,2,random(),0,color, false);  // (x , y)  y higher than 2, x higher than 1
     else {
-        let color = previewPiece.color;
+        color = previewPiece.color;
         previewPiece.color = marginColor;
         previewPiece.update();
         previewPiece.x = 9;
@@ -494,7 +512,7 @@ function createPiece() {
   
   
     testPiece = new _piece(piece.x,piece.y,piece.type,1, bgColor, false);  // (x , y)  y higher than 2, x higher than 1
-   
+    testPiece.isActive = false;
    
     targetPiece = new _piece(piece.x,piece.y,piece.type,0, "black", true);  // (x , y)  y higher than 2, x higher than 1
    
@@ -516,6 +534,7 @@ function targetDrop() {
 
     targetPiece.isActive = false;
     targetPiece.isTarget = false;
+    
     targetPiece.update();
     for (i in targetPiece.occupiedBlocks) {
 
@@ -696,8 +715,10 @@ function scoreLines() {
     for (i of completedLines) {
         cutLine(i);
         score++;
-        if (score >= level * 5) level++;
-        speed = 1000 / level;
+        if (score >= level * 5) {
+            level++;
+            speed*=.8;
+        }
         gameCanvas.update();
         
     }
@@ -847,7 +868,8 @@ function preFill() {
 function blow() {
 
     //gameCanvas.setInterval.start.interval(updateGameCanvas, 10000);
-    //console.log(gameCanvas.interval);
+    console.log("yay");
+    return "blow";
     
 }
 
