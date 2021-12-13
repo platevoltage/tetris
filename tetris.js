@@ -1,5 +1,5 @@
-const screenWidth = 500;
-const screenHeight = 600;
+const screenWidth = window.innerWidth-20;
+const screenHeight = window.innerHeight-20;
 const yMargin = 4;
 const yMarginBottom = 1;
 const xMargin = 5;
@@ -8,8 +8,10 @@ const gridHeight = 20 + yMargin + yMarginBottom;
 const bgColor = "#222222";
 const lineColor = "#111111";
 const marginColor = "#000000";
-const squareWidth = 30;
-const squareHeight = 30;
+
+const squareHeight = screenHeight/20;
+const squareWidth = squareHeight;
+
 var level = 1;
 var speed = 1000  / level;
 var score = 0;
@@ -19,7 +21,7 @@ var piece;
 var previewPiece;
 var testPiece;
 var targetPiece;
-var scoreBox = new textBox(400, 80, score, 80);
+var scoreBox = new textBox(squareWidth*12, screenHeight/10, score, screenHeight/10);
 var smallTestSquare = new Array();
 
 
@@ -125,7 +127,7 @@ function square(x, y, color, width, height) {
 
     this.update = function() {
         var ctx = gameCanvas.context;
-        outline = 6;
+        outline = squareWidth/5;
         ctx.lineWidth = outline;
         
         if (this.hollow) {
@@ -212,7 +214,7 @@ function fillGrid() {
     for(let j=0;j<gridWidth+xMargin;j++) {
         var row = new Array();
         for(let i=0;i<gridHeight+yMarginBottom;i++) {
-            row.push(new square(30*(j-xMargin),30*(i-yMargin),bgColor,squareWidth, squareHeight));
+            row.push(new square(squareWidth*(j-xMargin),squareHeight*(i-yMargin),bgColor,squareWidth, squareHeight));
             //row[i].update();
 
         }
@@ -771,23 +773,24 @@ function cutLine(line) {
 }
 
 function setExplosives(line) {
-    let lineY = (line-yMargin)*30;
+    let lineY = (line-yMargin)*squareHeight;
     let x = squareWidth;
     
     //console.log(x);
     
     for (let i = 0; i < 10; i++) {
         let color = grid[i+xMargin][line].color;
+        let size = squareHeight/2;
         
         let a = smallTestSquare.length;
         //console.log(a);
         
         smallTestSquare.push([]);
 
-        smallTestSquare[a].push(new square(i*x,lineY,color, 15, 15));
-        smallTestSquare[a].push(new square(i*x+15,lineY,color, 15, 15));
-        smallTestSquare[a].push(new square(i*x+15,lineY+15,color, 15, 15));
-        smallTestSquare[a].push(new square(i*x,lineY+15,color, 15, 15));    
+        smallTestSquare[a].push(new square(i*x,lineY,color, size, size));
+        smallTestSquare[a].push(new square(i*x+size,lineY,color, size, size));
+        smallTestSquare[a].push(new square(i*x+size,lineY+size,color, size, size));
+        smallTestSquare[a].push(new square(i*x,lineY+size,color, size, size));    
         
     }
     
@@ -816,13 +819,13 @@ function setExplosives(line) {
 
 function testAnimation() {
 
-    let speed = 10;
+    let speed = squareHeight/2;
     
     if (smallTestSquare.length && Math.abs(smallTestSquare[0][0].x) < 1000) {
         //testSquare.x = 2000;
         for (let i = 0; i < smallTestSquare.length; i++) {
             let randomX = speed+Math.random()*10;
-            let randomY = speed/20;
+            let randomY = speed*Math.random()/3;
 
             
 
