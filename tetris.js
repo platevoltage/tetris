@@ -136,12 +136,19 @@ function square(x, y, color, width, height) {
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.strokeRect(this.x+outline/2, this.y+outline/2, this.width-outline, this.height-outline);
             
-        } else if ((this.isActive || this.isSet) && this.color != "#000000") {
+        } else if ((this.isActive || this.isSet ) ) {
             
         
             ctx.strokeStyle = "#00000033";
+           
+            
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
+
+            ctx.strokeRect(this.x+outline/2, this.y+outline/2, this.width-outline, this.height-outline);
+            ctx.strokeStyle = "#00000055";
+            outline/=2;
+            ctx.lineWidth = outline;
             ctx.strokeRect(this.x+outline/2, this.y+outline/2, this.width-outline, this.height-outline);
         }
 
@@ -176,8 +183,8 @@ function updateGameCanvas() {
                 grid[j][i].color = bgColor;
                 
             }
-            if ( grid[j][i].isRmargin ) {
-                //grid[j][i].color = "pink";
+            if ( grid[j][i].isRmargin && !grid[j][i].isActive) {
+                grid[j][i].color = "black";
                 //grid[j][i].isActive = false;
             }
             if ( grid[j][i].isTarget ) {
@@ -471,20 +478,22 @@ function updatePiece() {
 function createPiece() {
     function random() {
     let type = "";
-    colorHex = 0xFFFFFF;
-    color = "#" + colorHex.toString(16)
+    
+
     let randomNum = Math.floor(Math.random()*7);
     //console.log(randomNum);
-    console.log("#" + colorHex.toString(16));
+  
+
+
     
     switch (randomNum) {
-        case 0: type = "iBlock"; color = "yellow" ;break;
-        case 1: type = "jBlock"; color = "orange"; break;
-        case 2: type = "lBlock"; color = "blue"; break;
-        case 3: type = "oBlock"; color = "green"; break;
-        case 4: type = "sBlock"; color = "purple"; break;
-        case 5: type = "tBlock"; color = "red"; break;
-        case 6: type = "zBlock"; color = "white"; break;
+        case 0: type = "iBlock"; color = "#ffff00ff";break;
+        case 1: type = "jBlock"; color = "#ff5555ff"; break;
+        case 2: type = "lBlock"; color = "#0000ffff"; break;
+        case 3: type = "oBlock"; color = "#00ff00ff"; break;
+        case 4: type = "sBlock"; color = "#ff00ffff"; break;
+        case 5: type = "tBlock"; color = "#ff0000ff"; break;
+        case 6: type = "zBlock"; color = "#ffffffff"; break;
     }
     //type = "iBlock";
     //console.log(randomNum);
